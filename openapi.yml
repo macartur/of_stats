@@ -1,0 +1,388 @@
+openapi: 3.0.0
+info:
+  title: kytos/of_stats
+  version: 0.1.0
+  description: "**Warning**: *This documentation is experimental and will
+  change soon.*\n
+
+  Provide statistics of openflow switches."
+
+tags:
+- name: PortStatiscs
+  description: Rest API endpoints related to Port statistics.
+- name: FlowStatistics
+  description: Rest API endpoints related to Flow statistics.
+
+paths:
+  /api/kytos/of_stats/{dpid}/ports:
+    get:
+      summary: "List of all ports of the switch identified by dpid."
+      parameters:
+        - $ref: '#/parameters/dpid'
+      tags:
+      - PortStatiscs
+      responses:
+        200:
+          description: "List all ports of the switch identified by **dpid** and
+          the latest number for each statistic type. Also provide the interface
+          name, **MAC** address and **link speed** (*bps*)."
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    description: List of Ports avaliable in the switch.
+                    items:
+                      $ref: '#/definitions/Port'
+
+  /api/kytos/of_stats/{dpid}/ports/{port}:
+    get:
+      summary: "List more statistics about of a port of the switch identified
+      by dpid."
+      parameters:
+        - $ref: '#/parameters/dpid'
+        - $ref: '#/parameters/port'
+        - $ref: '#/parameters/start_timestamp'
+        - $ref: '#/parameters/end_timestamp'
+      tags:
+      - PortStatiscs
+      responses:
+        200:
+          description: "Provide more numbers (latest ones) for each statistic
+          type for port **port** of switch **dpid**. \n
+
+          If **start=[*start*]** is omitted, use the entire database period.
+          If **end=[*end*]** is omitted, use the time of the request as *end*."
+          content:
+            application/json:
+              schema:
+                allOf:
+                - $ref: '#/definitions/PortDatails'
+
+  /api/kytos/of_stats/{dpid}/flows:
+    get:
+      summary: "List all flows of the switch identified by dpid."
+      parameters:
+        - $ref: '#/parameters/dpid'
+      tags:
+      - FlowStatistics
+      responses:
+        200:
+          description: "List all flows of the switch identified by **dpid**,
+          their IDs and the latest number for each statistic type."
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    description: List of Flows avaliable in the switch.
+                    items:
+                      $ref: '#/definitions/Flow'
+
+  /api/kytos/of_stats/{dpid}/flows/{ID}:
+    get:
+      summary: "Provide more numbers (latest ones) for each statistic for flow
+      ID of switch dpid."
+      parameters:
+        - $ref: '#/parameters/dpid'
+        - $ref: '#/parameters/flow_id'
+        - $ref: '#/parameters/start_timestamp'
+        - $ref: '#/parameters/end_timestamp'
+      tags:
+      - FlowStatistics
+      responses:
+        200:
+          description: "Provide more numbers (latest ones) for each statistic
+          for flow **ID** of switch **dpid**. \n
+
+          If **start=[*start*]** is omitted, use the entire database period.
+          If **end=[*end*]** is omitted, use the time of the request as
+          *end*."
+          content:
+            application/json:
+              schema:
+                allOf:
+                - $ref: '#/definitions/FlowDetails'
+
+parameters:
+
+  dpid:
+    in: path
+    name: dpid
+    required: true
+    schema:
+      type: string
+    description: "Data path identifier of a switch."
+
+  port:
+    in: path
+    name: port
+    required: true
+    schema:
+      type: integer
+      minimum: 1
+    description: "Switch port number of a switch."
+
+  start_timestamp:
+    in: query
+    name: start
+    required: false
+    schema:
+      type: integer
+      minimum: 1
+    description: "Indicate the first value of timestamp."
+
+  end_timestamp:
+    in: query
+    name: end
+    required: false
+    schema:
+      type: integer
+      maximum: 65534
+    description: "Indicate the last value of timestamp."
+
+  flow_id:
+    in: path
+    name: ID
+    required: true
+    schema:
+      type: string
+      minimum: 1
+    description: "Flow Identifier of switch dpid."
+
+definitions:
+
+  Port:
+    type: object
+    properties:
+      mac:
+        type: string
+        description: "Mac address of a switch port"
+        example: "d2:39:59:8d:0c:94"
+      name:
+        type: string
+        description: Port name.
+        example: s2-eth1
+      port:
+        type: interger
+        description: Port number.
+        example: 1
+      rx_bytes:
+        type: float
+        description: Number of received bytes.
+        example: 10244268.157941082
+      rx_dropped:
+        type: float
+        description: Number of packets received and dropped.
+        example: 0.0
+      rx_errors:
+        type: float
+        desccription: Number of received errors.
+        example: 0.0
+      speed:
+        type: integer
+        description: Maximum port speed.
+        example: 10000000000
+      tx_bytes:
+        type: float
+        description: Number of transmitted bytes.
+        example: 10244290.726295035
+      tx_dropped:
+        type: float
+        description: Number of packets transmitted and dropped.
+        example: 0.0
+      tx_erros:
+        type: float
+        description: Number of transmit errors.
+        example: 0.0
+      tx_util:
+        type: float
+        description: Transmit bandwidth utilization (0 to 1).
+        example: 0.008195432581036029
+
+  PortDatails:
+    type: object
+    properties:
+      data:
+        type: object
+        properties:
+          rx_bytes:
+            type: array
+            description: Number of received bytes.
+            example: [66647351.252421244117,9884929.4810,98803928.7153]
+            items:
+              type: float
+          rx_dropped:
+            type: array
+            description: Number of  packets transmitted and dropped.
+            example: [0.526738393,1.98728726227829,292.872625267282]
+            items:
+              type: float
+          rx_errors:
+            type: array
+            description: Number of errors received.
+            example: [1234.567890234630672,5678.9572424680,12.34574680]
+            items:
+              type: float
+          timestamps:
+            type: array
+            description: Time when the port information was stored.
+            example: [23456789, 8762682, 7762627892]
+          tx_bytes:
+            type: array
+            description: Number of transmitted bytes.
+            example: [2345678967.89456789,678945.62346,78906.784562347]
+            items:
+              type: float
+          tx_dropped:
+            type: array
+            description: Number of packets dropped by TX.
+            example: [6789025678345,789457691324,456789023456456791]
+            items:
+              type: float
+          tx_errors:
+            type: array
+            description: Number of transmit errors.
+            example: [56.7834523456,7.89562346,987.65765434]
+            items:
+              type: float
+
+  Flow:
+    type: object
+    properties:
+      actions:
+        type: array
+        description: List of Actions that was stored by flow.
+        example:
+        - {
+           "port": 2,
+           "type": "action_output"
+        }
+        items:
+          - ref: "#/definitions/Action"
+      buffer_id:
+        type: integer
+        description: Buffer identifier.
+        example: 2333
+      cookie:
+        type: integer
+        description: Opaque controller-issued identifier.
+        example: 7633
+      dl_dst:
+        type: string
+        description: Ethernet source address.
+        example: 00:00:00:00:00:01
+      dl_src:
+        type: string
+        description: Ethernet source address.
+        example: 00:00:00:00:00:02
+      dl_type:
+        type: integer
+        description: Ethernet frame type.
+        example: 2048
+      dl_vlan:
+        type: integer
+        description: Input VLAN id.
+        example: 0
+      dl_vlan_pcp:
+        type: integer
+        description: Input VLAN priority.
+        example: 0
+      hard_timeout:
+        type: integer
+        description: Max time before discarding (seconds).
+        example: 0
+      id:
+        type: string
+        description: Flow Identifier.
+        example: 3b8464f07e0ef1913baa54795b309cfc
+      idle_timeout:
+        type: integer
+        description: Idle time before discarding (seconds).
+        example: 0
+      in_port:
+        type: integer
+        description: Input switch port.
+        example: 1
+      nw_dst:
+        type: string
+        description: IP destination address.
+        example: "0.0.0.0"
+      nw_src:
+        type: string
+        description: IP source address.
+        example: "0.0.0.0"
+      priority:
+        type: integer
+        description: Priority level of flow entry.
+        example: 0
+      stats:
+        type: object
+        description: Object representing a flow statistic.
+        properties:
+          Bps:
+            type: integer
+            description: Bytes por seconds.
+            example: 0.0
+          pps:
+            type: integer
+            description: Packets per seconds.
+            example: 0.0
+      table_id:
+        type: integer
+        description: ID of table flow came from.
+        example: 0
+      tp_dst:
+        type: string
+        description: TCP/UDP source port.
+        example: 0
+      tp_src:
+        type: string
+        description: TCP/UDP source port.
+        example: 0
+      wildcards:
+        type: integer
+        description: Number representing a Wildcard fields.
+        example: 3678435
+
+  Action:
+    type: object
+    properties:
+      port:
+        type: integer
+        description: Port number where the flow was installed
+        example: 2
+      type:
+        type: string
+        description: Name of a action type
+        example: action_output
+
+  FlowDetails:
+    type: object
+    properties:
+      data:
+        type: object
+        decription: Flow informations
+        properties:
+          bytes_count:
+            type: array
+            description: Number of bytes in flow.
+            example: [66654140, 9930607, 99038495]
+            items:
+              type: integer
+          packet_count:
+            type: array
+            description: Number of packets in flow.
+            example: [66747103, 9978767, 98804666]
+            items:
+              type: integer
+          timestamps:
+            type: array
+            description: Time when the flow information was stored.
+            example: [23456789, 8762682, 7762627892]
+            items:
+              type: integer
