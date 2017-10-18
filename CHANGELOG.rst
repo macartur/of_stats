@@ -10,6 +10,7 @@ Added
 
 Changed
 =======
+- Moved of_stats to a repository of its own.
 
 Deprecated
 ==========

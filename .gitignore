@@ -94,3 +94,6 @@ ENV/
 .ropeproject
 *.png
 *.rrd
+
+# of_stats
+user_speed.json

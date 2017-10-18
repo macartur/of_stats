@@ -1,115 +1,127 @@
-########
 Overview
-########
+========
 
-|Experimental| |Tag| |Release| |License| |Build| |Coverage| |Quality|
+In order to manage a network, an administrator must have updated and reliable
+statistics about it, in several levels of deepness, from a
+switch port inbound and outbound traffic to the traffic of different connected
+networks.
 
+To achieve that, this Network Application collects statistical data provided by
+the switches connected to the controller. We *do not use SNMP protocol* because
+the OpenFlow protocol already provide this data. The data is stored to be
+provided later through a REST API. This API can supply instant data,
+historical data, and also some calculated information.
 
-Network Applications(*NApps*) are part of `Kytos project <https://kytos.io/>`__
-and were developed to be used with it. This repository contain only NApps
-developed by Kytos core team.
+The provided statistics, per switch, are:
 
-Besides these NApps, new applications can be written by third party developers
-and may not be maintained by the core team. Of course, we support this and
-provide a repository infrastructure so everyone can upload and share their
-NApps.
+* **Ports/Interfaces**: bytes/sec, utilization, dropped packets/sec and
+  errors/sec split into transmission and reception; interface name, MAC address
+  and link speed (bps);
+* **Flows**: packets/sec, bytes/sec;
 
-Basically this is a small set of Network Apps that is installed for your Kytos
-controller by default.
+Requirements
+============
 
-Please, feel free to use them as a starting point and reference for your own
-NApps.
+Besides Python packages described in *requirements.txt*,
+`rrdtool <http://www.rrdtool.org>`__ is required and must be installed. If you
+are using Ubuntu, you must install, using apt:
 
-.. note:: When a NApp has an experimental tag, it means that the NApp isn't
-   working properly yet.
+.. code-block:: shell
 
-QuickStart
-**********
+   apt install rrdtool python3.6-dev librrd-dev
+
+.. note:: We currently use rrd to keep persistence in data, but future
+    versions of this napp will allow you to choose what kind of backend you
+    want to use.
 
 Installing
 ==========
 
-NApps are installed and configured using
-`kytos-utils <https://github.com/kytos/kytos-utils>`__
+All of the Kytos Network Applications are located in the NApps online repository.
+To install this NApp, run:
 
-We are doing a huge effort to make Kytos and its components available on all
-common distros. So, we recommend you to download it from your distro repository.
+.. code:: shell
 
-To install a specific NApp, run:
+   $ kytos napps install kytos/of_stats
+
+If you are going to install kytos-napps from source code, all napps will be
+installed by default (just remember you need to enable the ones you want
+running).
+
+REST API
+--------
+
+As stated on the *Overview* section, this NApp provides some statistics through
+a REST API. There are two main groups of statistics provided:
+
+* **Port Statistics**;
+* **Flow Statistics**.
+
+All endpoints provided by this NApp are GET Endpoints only, so no POSTs are
+allowed. For more information about the REST API please visit the file
+``REST.rst``.
+
+Troubleshooting
+===============
+
+.. attention:: The filenames below are relative to this NApp's folder.
+   If you run Kytos as root, it is ``/var/lib/kytos/napps/kytos/of_stats`` or,
+   if using virtualenv, ``$VIRTUAL_ENV/var/lib/kytos/napps/kytos/of_stats``.
+
+Wrong link utilization
+----------------------
+Sometimes, the link speed is wrongly reported by the switch or there's no such
+speed specified in the protocol. In these cases, you can manually define the
+speeds in the file ``user_speed.json``. Changes to this file will be loaded
+automatically without the need to restart the controller.
+
+Setting the interface speeds manually is quite easy. Create ``user_speed.json``
+following the provided ``user_speed.example.json`` file. Let's see what the
+example means:
+
+.. code-block:: json
+
+   {
+     "default": 100,
+     "00:00:00:00:00:00:00:01":
+     {
+       "default": 10,
+       "4": 1
+     }
+   }
+
+The speed is specified in Gbps (not necessarily integers). The first line has
+an optional *default* value that specify the speed of any interface that is not
+found in this file. The switch whose dpid is *00:...:00:01* also has an
+optional *default* value of 10 Gbps for all its ports except the number 4 that
+is 1 Gbps. If there is no *default* value and the dpid or port is not
+specified, the speed will be taken following the OpenFlow specifications.
+To make it clear, find below the speed of some interfaces when
+``user_speed.json`` has the content above:
+
++-------------------------+------+--------------+
+|          DPID 1         | Port | Speed (Gbps) |
++=========================+======+==============+
+| 00:00:00:00:00:00:00:01 |  4   |        1     |
++-------------------------+------+--------------+
+| 00:00:00:00:00:00:00:01 |  2   |       10     |
++-------------------------+------+--------------+
+| 00:00:00:00:00:00:00:02 |  4   |      100     |
++-------------------------+------+--------------+
+| 00:00:00:00:00:00:00:02 |  2   |      100     |
++-------------------------+------+--------------+
+
+Changing settings.py (advanced)
+-------------------------------
+Some changes in ``settings.py`` require recreating the database. Check the
+section ``Deleting the database`` above.
+
+Deleting the database
+---------------------
+You don't have to stop the controller to delete the databases. This NApp will
+recreate them as needed after you run:
 
 .. code-block:: shell
 
-   $ kytos napps install <napp>
+   rm -rf rrd/flows rrd/ports
 
-The NApp will be downloaded and installed automatically from the online
-repository if it is not found in the local system.
-
-Of course, if you are trying to test, develop or just want a more recent version
-of our software, no problem: Download now the latest release (it still a beta
-software) from our repository. This will download and install all the currently
-available NApps.
-
-First you need to clone *kytos-napps* repository:
-
-.. code-block:: shell
-
-   $ git clone https://github.com/kytos/kytos-napps.git
-
-After cloning, the installation process is done by `setuptools` in the usual
-way:
-
-.. code-block:: shell
-
-   $ cd kytos-napps
-   $ sudo python3.6 setup.py install
-
-Configuring
-***********
-
-After *kytos-napps* installation, this package copies NApps to
-``/var/lib/kytos/napps/`` (your controller's NApps folder is configured to
-point to this directory). Enabled NApps are located in
-``/var/lib/kytos/napps/kytos/`` and are loaded when your Kytos controller is
-started.
-
-Feel free to move this folder to another place in your system, but please
-remember to change this on your controller config file. For more information
-please visit the section "Configuration" on the `Kytos's Administrator Guide
-<https://docs.kytos.io/kytos/administrator/#configuration>`__.
-
-For information about enabling or disabling NApps for the Kytos controller,
-please refer to `kytos-utils <https://github.com/kytos/kytos-utils>`__.
-
-Authors
-*******
-
-For a complete list of authors, please open ``AUTHORS.rst`` file.
-
-Contributing
-************
-
-If you want to contribute to this project, please read `Kytos Documentation
-<https://docs.kytos.io/kytos/contributing/>`__ website.
-
-License
-*******
-
-This software is under *MIT-License*. For more information please read
-``LICENSE`` file.
-
-.. |Experimental| image:: https://img.shields.io/badge/stability-experimental-orange.svg
-.. |Tag| image:: https://img.shields.io/github/tag/kytos/kytos-napps.svg
-   :target: https://github.com/kytos/kytos-napps/tags
-.. |Release| image:: https://img.shields.io/github/release/kytos/kytos-napps.svg
-   :target: https://github.com/kytos/kytos-napps/releases
-.. |License| image:: https://img.shields.io/github/license/kytos/kytos-napps.svg
-   :target: https://github.com/kytos/kytos-napps/blob/master/LICENSE
-.. |Build| image:: https://scrutinizer-ci.com/g/kytos/kytos-napps/badges/build.png?b=master
-  :alt: Build status
-  :target: https://scrutinizer-ci.com/g/kytos/kytos-napps/?branch=master
-.. |Coverage| image:: https://scrutinizer-ci.com/g/kytos/kytos-napps/badges/coverage.png?b=master
-  :alt: Code coverage
-  :target: https://scrutinizer-ci.com/g/kytos/kytos-napps/?branch=master
-.. |Quality| image:: https://scrutinizer-ci.com/g/kytos/kytos-napps/badges/quality-score.png?b=master
-  :alt: Code-quality score
-  :target: https://scrutinizer-ci.com/g/kytos/kytos-napps/?branch=master
