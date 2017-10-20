@@ -1,6 +1,6 @@
+########
 Overview
-========
-
+########
 In order to manage a network, an administrator must have updated and reliable
 statistics about it, in several levels of deepness, from a
 switch port inbound and outbound traffic to the traffic of different connected
@@ -19,59 +19,84 @@ The provided statistics, per switch, are:
   and link speed (bps);
 * **Flows**: packets/sec, bytes/sec;
 
-Requirements
-============
+##########
+Installing
+##########
 
-Besides Python packages described in *requirements.txt*,
-`rrdtool <http://www.rrdtool.org>`__ is required and must be installed. If you
-are using Ubuntu, you must install, using apt:
+************
+RRDTool
+************
+.. note:: We currently use rrd to keep persistence in data, but future
+    versions of this napp will allow you to choose what kind of backend you
+    want to use.
+
+==============
+Linux packages
+==============
+Currently, this NApp uses `rrdtool <http://www.rrdtool.org>`__ and its Python
+wrapper needs several packages to be installed and run. In Ubuntu, you can
+install them by:
 
 .. code-block:: shell
 
    apt install rrdtool python3.6-dev librrd-dev
 
-.. note:: We currently use rrd to keep persistence in data, but future
-    versions of this napp will allow you to choose what kind of backend you
-    want to use.
+===============
+Python packages
+===============
+With the Linux packages above installed, just run:
 
-Installing
-==========
+.. code-block:: shell
 
-All of the Kytos Network Applications are located in the NApps online repository.
-To install this NApp, run:
+   pip install rrdtool
+
+*****************
+NApp installation
+*****************
+All of the Kytos Network Applications are located in the online NApps
+repository. To install this NApp, run:
+
+.. code-block:: shell
+
+   kytos napps install kytos/of_stats
+
 
 .. code:: shell
 
-   $ kytos napps install kytos/of_stats
+   kytos napps install kytos/topology
 
-If you are going to install kytos-napps from source code, all napps will be
-installed by default (just remember you need to enable the ones you want
-running).
+**********
+Developers
+**********
+To run the NApp from the source code, install the requirements and run:
 
-REST API
---------
+.. code-block:: shell
 
-As stated on the *Overview* section, this NApp provides some statistics through
-a REST API. There are two main groups of statistics provided:
+   git clone https://github.com/kytos/of_stats.git
+   cd of_stats
+   kytos napps install kytos/of_stats
 
-* **Port Statistics**;
-* **Flow Statistics**.
+With the setup above, ``git pull`` will update NApp.
 
-All endpoints provided by this NApp are GET Endpoints only, so no POSTs are
-allowed. For more information about the REST API please visit the file
-``REST.rst``.
+###########
+Configuring
+###########
+There's no need to configure anything for this NApp to run. Read the sections
+below if you need to change of_stats behavior or just want to know more details
+on how it works.
 
-Troubleshooting
-===============
+*************
+Settings file
+*************
+You can customize settings like how long to wait before asking the switches
+for more statistics, as well as rrdtool-related configuration in the file
+``settings.py``.
 
-.. attention:: The filenames below are relative to this NApp's folder.
-   If you run Kytos as root, it is ``/var/lib/kytos/napps/kytos/of_stats`` or,
-   if using virtualenv, ``$VIRTUAL_ENV/var/lib/kytos/napps/kytos/of_stats``.
-
-Wrong link utilization
-----------------------
+****************
+Custom bandwidth
+****************
 Sometimes, the link speed is wrongly reported by the switch or there's no such
-speed specified in the protocol. In these cases, you can manually define the
+speed in the protocol specification. In these cases, you can manually define the
 speeds in the file ``user_speed.json``. Changes to this file will be loaded
 automatically without the need to restart the controller.
 
@@ -111,13 +136,55 @@ To make it clear, find below the speed of some interfaces when
 | 00:00:00:00:00:00:00:02 |  2   |      100     |
 +-------------------------+------+--------------+
 
-Changing settings.py (advanced)
--------------------------------
-Some changes in ``settings.py`` require recreating the database. Check the
-section ``Deleting the database`` above.
+######
+Events
+######
 
+********
+Listened
+********
+
+================================================
+kytos/of_core.v0x01.messages.in.ofpt_stats_reply
+================================================
+This event contains the statistics to be processed.
+
+Content
+-------
+A KytosEvent object containing:
+
+- message: a `StatsReply` object;
+- source: contains the switch datapath ID in ``source.switch.dpid``.
+
+########
+Rest API
+########
+You can find a list of the available endpoints and example input/output in the
+'REST API' tab in this NApp's webpage in the `Kytos NApps Server
+<https://napps.kytos.io/kytos/of_stats>`_.
+
+###############
+Troubleshooting
+###############
+.. attention:: The filenames below are relative to this NApp's folder.
+   If you run Kytos as root, it is ``/var/lib/kytos/napps/kytos/of_stats`` or,
+   if using virtualenv, ``$VIRTUAL_ENV/var/lib/kytos/napps/kytos/of_stats``.
+
+**********************
+Wrong link utilization
+**********************
+Check whether the link bandwidth is correct. If it is not, set the correct
+bandwidth by following the instructions in *Configuring*, *Custom bandwidth*.
+
+****************************
+New settings are not applied
+****************************
+Some changes in ``settings.py`` require recreating the database. Check the
+section ``Deleting the database`` below.
+
+*********************
 Deleting the database
----------------------
+*********************
 You don't have to stop the controller to delete the databases. This NApp will
 recreate them as needed after you run:
 
