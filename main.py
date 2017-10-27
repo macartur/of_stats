@@ -54,25 +54,25 @@ class Main(KytosNApp):
 
     # REST API
 
-    @rest('<dpid>/ports/<int:port>')
+    @rest('v1/<dpid>/ports/<int:port>')
     @staticmethod
     def get_port_stats(dpid, port):
         """Return statistics for ``dpid`` and ``port``."""
         return PortStatsAPI.get_port_stats(dpid, port)
 
-    @rest('<dpid>/ports')
+    @rest('v1/<dpid>/ports')
     @staticmethod
     def get_ports_list(dpid):
         """Return ports of ``dpid``."""
         return PortStatsAPI.get_ports_list(dpid)
 
-    @rest('<dpid>/flows/<flow_hash>')
+    @rest('v1/<dpid>/flows/<flow_hash>')
     @staticmethod
     def get_flow_stats(dpid, flow_hash):
         """Return statistics of a flow in ``dpid``."""
         return FlowStatsAPI.get_flow_stats(dpid, flow_hash)
 
-    @rest('<dpid>/flows')
+    @rest('v1/<dpid>/flows')
     @staticmethod
     def get_flow_list(dpid):
         """Return all flows of ``dpid``."""

@@ -10,7 +10,8 @@ Added
 
 Changed
 =======
-- Moved of_stats to a repository of its own.
+- Moved of_stats to a repository of its own
+- REST API endpoints prefixed with "v1/"
 
 Deprecated
 ==========

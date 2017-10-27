@@ -12,7 +12,7 @@ tags:
 - name: Flows
 
 paths:
-  /api/kytos/of_stats/{dpid}/ports:
+  /api/kytos/of_stats/v1/{dpid}/ports:
     get:
       summary: Given a switch, list its ports with their latest statistics
       description: "Get the latest statistics of all the ports of a switch
@@ -37,7 +37,7 @@ paths:
                     items:
                       $ref: '#/components/schemas/Port'
 
-  /api/kytos/of_stats/{dpid}/ports/{port}:
+  /api/kytos/of_stats/v1/{dpid}/ports/{port}:
     get:
       summary: Get up to 60 points of each statistic type for a port
       description: Return up to 60 evenly-distributed points from ``start`` to
@@ -59,7 +59,7 @@ paths:
                 allOf:
                   - $ref: '#/components/schemas/PortDetails'
 
-  /api/kytos/of_stats/{dpid}/flows:
+  /api/kytos/of_stats/v1/{dpid}/flows:
     get:
       summary: Given a switch, list its flows with their latest statistics
       description: Get the latest statistics of all flows of a switch
@@ -82,7 +82,7 @@ paths:
                     items:
                       $ref: '#/components/schemas/Flow'
 
-  /api/kytos/of_stats/{dpid}/flows/{ID}:
+  /api/kytos/of_stats/v1/{dpid}/flows/{ID}:
     get:
       summary: Get up to 60 points of each statistic type for a flow
       description: Return up to 60 evenly-distributed points from ``start``
