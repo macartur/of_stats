@@ -334,6 +334,13 @@ class FlowStats(Stats):
         """Receive flow stats."""
         for fs in flows_stats:
             flow = Flow.from_of_flow_stats(fs, switch)
+
+            # Update controller's flow
+            controller_flow = switch.get_flow_by_id(flow.id)
+            if controller_flow:
+                controller_flow.stats = flow.stats
+
+            # Update RRD database
             cls.rrd.update((switch.id, flow.id),
                            packet_count=flow.stats.packet_count,
                            byte_count=flow.stats.byte_count)
