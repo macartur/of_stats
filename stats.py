@@ -335,5 +335,5 @@ class FlowStats(Stats):
         for fs in flows_stats:
             flow = Flow.from_of_flow_stats(fs, switch)
             cls.rrd.update((switch.id, flow.id),
-                           packet_count=fs.packet_count.value,
-                           byte_count=fs.byte_count.value)
+                           packet_count=flow.stats.packet_count,
+                           byte_count=flow.stats.byte_count)
