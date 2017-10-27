@@ -17,6 +17,7 @@ Deprecated
 
 Removed
 =======
+- Description, now dealt in kytos/of_core.
 
 Fixed
 =====

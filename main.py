@@ -5,7 +5,7 @@ from kytos.core.helpers import listen_to
 from pyof.v0x01.controller2switch.stats_request import StatsTypes
 
 from napps.kytos.of_stats import settings
-from napps.kytos.of_stats.stats import Description, FlowStats, PortStats
+from napps.kytos.of_stats.stats import FlowStats, PortStats
 from napps.kytos.of_stats.stats_api import FlowStatsAPI, PortStatsAPI, StatsAPI
 
 
@@ -18,12 +18,9 @@ class Main(KytosNApp):
 
         # Initialize statistics
         msg_out = self.controller.buffers.msg_out
-        self._stats = {StatsTypes.OFPST_DESC.value: Description(msg_out),
-                       StatsTypes.OFPST_PORT.value: PortStats(msg_out),
+        self._stats = {StatsTypes.OFPST_PORT.value: PortStats(msg_out),
                        StatsTypes.OFPST_FLOW.value: FlowStats(msg_out)}
 
-        # Give Description and StatsAPI the controller
-        Description.controller = self.controller
         StatsAPI.controller = self.controller
 
     def execute(self):

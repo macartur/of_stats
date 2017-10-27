@@ -337,32 +337,3 @@ class FlowStats(Stats):
             cls.rrd.update((switch.id, flow.id),
                            packet_count=fs.packet_count.value,
                            byte_count=fs.byte_count.value)
-
-
-class Description(Stats):
-    """Deal with Description messages."""
-
-    controller = {}
-
-    def __init__(self, msg_out_buffer):
-        """Initialize database."""
-        super().__init__(msg_out_buffer)
-        # Key is switch.id, value is StatsReply object
-        self._desc = {}
-
-    def request(self, conn):
-        """Ask for switch description. It is done only once per switch."""
-        switch = conn.switch
-        if switch.id not in self._desc:
-            req = StatsRequest(body_type=StatsTypes.OFPST_DESC)
-            self._send_event(req, conn)
-            log.debug('Desc request for switch %s sent.', switch.id)
-
-    def listen(self, switch, desc):
-        """Store switch description."""
-        self._desc[switch.id] = desc
-        switch.update_description(desc)
-        log.debug('Adding switch %s: mfr_desc = %s, hw_desc = %s,'
-                  ' sw_desc = %s, serial_num = %s', switch.dpid,
-                  desc.mfr_desc, desc.hw_desc, desc.sw_desc,
-                  desc.serial_num)
