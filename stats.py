@@ -6,6 +6,7 @@ from pathlib import Path
 import rrdtool
 from kytos.core import KytosEvent, log
 from napps.kytos.of_core.v0x01.flow import Flow
+from napps.kytos.of_core.v0x01.flow import PortStats as OFCorePortStats
 from pyof.v0x01.common.phy_port import Port
 from pyof.v0x01.controller2switch.common import (AggregateStatsRequest,
                                                  FlowStatsRequest,
@@ -268,6 +269,7 @@ class PortStats(Stats):
                     ' rx_errors %s, tx_errors %s'
 
         for ps in ports_stats:
+            cls._update_controller_interface(switch, ps)
             cls.rrd.update((switch.id, ps.port_no.value),
                            rx_bytes=ps.rx_bytes.value,
                            tx_bytes=ps.tx_bytes.value,
@@ -281,15 +283,19 @@ class PortStats(Stats):
                       ps.rx_dropped.value, ps.tx_dropped.value,
                       ps.rx_errors.value, ps.tx_errors.value)
 
+    @staticmethod
+    def _update_controller_interface(switch, port_stats):
+        port_no = port_stats.port_no.value
+        iface = switch.get_interface_by_port_no(port_no)
+        if iface.stats is None:
+            iface.stats = OFCorePortStats()
+        iface.stats.update(port_stats)
+
 
 class AggregateStats(Stats):
     """Deal with AggregateStats message."""
 
     _rrd = RRD('aggr', ('packet_count', 'byte_count', 'flow_count'))
-
-    def __init__(self, msg_out_buffer):
-        """Initialize database."""
-        super().__init__(msg_out_buffer)
 
     def request(self, conn):
         """Ask for flow stats."""
