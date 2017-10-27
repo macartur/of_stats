@@ -5,7 +5,7 @@ from pathlib import Path
 
 import rrdtool
 from kytos.core import KytosEvent, log
-from napps.kytos.of_core.flow import Flow
+from napps.kytos.of_core.v0x01.flow import Flow
 from pyof.v0x01.common.phy_port import Port
 from pyof.v0x01.controller2switch.common import (AggregateStatsRequest,
                                                  FlowStatsRequest,
@@ -35,7 +35,7 @@ class Stats(metaclass=ABCMeta):
         pass
 
     @abstractmethod
-    def listen(self, dpid, stats):
+    def listen(self, switch, stats):
         """Listener for statistics."""
         pass
 
@@ -261,14 +261,14 @@ class PortStats(Stats):
         log.debug('Port Stats request for switch %s sent.', conn.switch.dpid)
 
     @classmethod
-    def listen(cls, dpid, ports_stats):
+    def listen(cls, switch, ports_stats):
         """Receive port stats."""
         debug_msg = 'Received port %s stats of switch %s: rx_bytes %s,' \
                     ' tx_bytes %s, rx_dropped %s, tx_dropped %s,' \
                     ' rx_errors %s, tx_errors %s'
 
         for ps in ports_stats:
-            cls.rrd.update((dpid, ps.port_no.value),
+            cls.rrd.update((switch.id, ps.port_no.value),
                            rx_bytes=ps.rx_bytes.value,
                            tx_bytes=ps.tx_bytes.value,
                            rx_dropped=ps.rx_dropped.value,
@@ -276,10 +276,10 @@ class PortStats(Stats):
                            rx_errors=ps.rx_errors.value,
                            tx_errors=ps.tx_errors.value)
 
-            log.debug(debug_msg, ps.port_no.value, dpid, ps.rx_bytes.value,
-                      ps.tx_bytes.value, ps.rx_dropped.value,
-                      ps.tx_dropped.value, ps.rx_errors.value,
-                      ps.tx_errors.value)
+            log.debug(debug_msg, ps.port_no.value, switch.id,
+                      ps.rx_bytes.value, ps.tx_bytes.value,
+                      ps.rx_dropped.value, ps.tx_dropped.value,
+                      ps.rx_errors.value, ps.tx_errors.value)
 
 
 class AggregateStats(Stats):
@@ -300,7 +300,7 @@ class AggregateStats(Stats):
                   conn.switch.dpid)
 
     @classmethod
-    def listen(cls, dpid, aggregate_stats):
+    def listen(cls, switch, aggregate_stats):
         """Receive flow stats."""
         debug_msg = 'Received aggregate stats from switch {}:' \
                     ' packet_count {}, byte_count {}, flow_count {}'
@@ -308,12 +308,12 @@ class AggregateStats(Stats):
         for ag in aggregate_stats:
             # need to choose the _id to aggregate_stats
             # this class isn't used yet.
-            cls.rrd.update((dpid,),
+            cls.rrd.update((switch.id,),
                            packet_count=ag.packet_count.value,
                            byte_count=ag.byte_count.value,
                            flow_count=ag.flow_count.value)
 
-            log.debug(debug_msg, dpid, ag.packet_count.value,
+            log.debug(debug_msg, switch.id, ag.packet_count.value,
                       ag.byte_count.value, ag.flow_count.value)
 
 
@@ -330,11 +330,11 @@ class FlowStats(Stats):
         log.debug('Flow Stats request for switch %s sent.', conn.switch.dpid)
 
     @classmethod
-    def listen(cls, dpid, flows_stats):
+    def listen(cls, switch, flows_stats):
         """Receive flow stats."""
         for fs in flows_stats:
-            flow = Flow.from_flow_stats(fs)
-            cls.rrd.update((dpid, flow.id),
+            flow = Flow.from_of_flow_stats(fs, switch)
+            cls.rrd.update((switch.id, flow.id),
                            packet_count=fs.packet_count.value,
                            byte_count=fs.byte_count.value)
 
@@ -347,23 +347,22 @@ class Description(Stats):
     def __init__(self, msg_out_buffer):
         """Initialize database."""
         super().__init__(msg_out_buffer)
-        # Key is dpid, value is StatsReply object
+        # Key is switch.id, value is StatsReply object
         self._desc = {}
 
     def request(self, conn):
         """Ask for switch description. It is done only once per switch."""
-        dpid = conn.switch.dpid
-        if dpid not in self._desc:
+        switch = conn.switch
+        if switch.id not in self._desc:
             req = StatsRequest(body_type=StatsTypes.OFPST_DESC)
             self._send_event(req, conn)
-            log.debug('Desc request for switch %s sent.', dpid)
+            log.debug('Desc request for switch %s sent.', switch.id)
 
-    def listen(self, dpid, desc):
+    def listen(self, switch, desc):
         """Store switch description."""
-        self._desc[dpid] = desc
-        switch = self.controller.get_switch_by_dpid(dpid)
+        self._desc[switch.id] = desc
         switch.update_description(desc)
         log.debug('Adding switch %s: mfr_desc = %s, hw_desc = %s,'
-                  ' sw_desc = %s, serial_num = %s', dpid,
+                  ' sw_desc = %s, serial_num = %s', switch.dpid,
                   desc.mfr_desc, desc.hw_desc, desc.sw_desc,
                   desc.serial_num)

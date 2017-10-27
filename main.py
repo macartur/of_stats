@@ -50,7 +50,7 @@ class Main(KytosNApp):
         msg = event.content['message']
         if msg.body_type.value in self._stats:
             stats = self._stats[msg.body_type.value]
-            stats.listen(event.source.switch.dpid, msg.body)
+            stats.listen(event.source.switch, msg.body)
         else:
             log.debug('No listener for %s in %s.', msg.body_type.value,
                       list(self._stats.keys()))
