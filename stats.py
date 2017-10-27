@@ -287,9 +287,10 @@ class PortStats(Stats):
     def _update_controller_interface(switch, port_stats):
         port_no = port_stats.port_no.value
         iface = switch.get_interface_by_port_no(port_no)
-        if iface.stats is None:
-            iface.stats = OFCorePortStats()
-        iface.stats.update(port_stats)
+        if iface is not None:
+            if iface.stats is None:
+                iface.stats = OFCorePortStats()
+            iface.stats.update(port_stats)
 
 
 class AggregateStats(Stats):
