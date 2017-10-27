@@ -1,5 +1,4 @@
 """Statistics application."""
-
 from kytos.core import KytosNApp, log, rest
 from kytos.core.helpers import listen_to
 from pyof.v0x01.controller2switch.stats_request import StatsTypes
@@ -77,3 +76,11 @@ class Main(KytosNApp):
     def get_flow_list(dpid):
         """Return all flows of ``dpid``."""
         return FlowStatsAPI.get_flow_list(dpid)
+
+    @rest('v1/<dpid>/ports/<int:port>/random')
+    @staticmethod
+    def get_random_interface_stats(dpid, port):
+        """Fake data for testing."""
+        # Ignore dpid and port
+        # pylint: disable=unused-argument
+        return PortStatsAPI.get_random_port_stats()

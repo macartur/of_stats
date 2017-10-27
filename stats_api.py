@@ -1,6 +1,7 @@
 """Module with Classes to handle statistics api."""
 import json
 from abc import ABCMeta, abstractmethod
+from random import randint
 
 from flask import Response, request
 from kytos.core import log
@@ -144,6 +145,15 @@ class PortStatsAPI(StatsAPI):
         """
         api = cls(dpid)
         return api.get_list()
+
+    @staticmethod
+    def get_random_port_stats():
+        stats = {'data': {
+            'timestamps': list(range(1508532494, 1508533094, 10)),
+            'rx_bytes': [randint(100_000, 1_000_000) for _ in range(60)],
+            'tx_bytes': [randint(100_000, 1_000_000) for _ in range(60)],
+        }}
+        return StatsAPI._get_response(stats)
 
     def get_list(self):
         """See :meth:`get_ports_list`."""
