@@ -40,9 +40,15 @@ class Main(KytosNApp):
             if switch.connection is not None:
                 stats.request(switch.connection)
 
-    @listen_to('kytos/of_core.v0x01.messages.in.ofpt_stats_reply')
+    @listen_to('kytos/of_core.v0x01.messages.in.ofpt_stats_reply',
+               'kytos/of_core.v0x04.messages.in.ofpt_multipart_reply')
     def listener(self, event):
-        """Store switch descriptions."""
+        """Listen to all stats reply we deal with.
+
+        Note: v0x01 and v0x04 ``body_type.value``s have the same meaning.
+        Besides, both ``msg.body`` have the fields/attributes we use. Thus,
+        we can treat them the same way and reuse the code.
+        """
         msg = event.content['message']
         if msg.body_type.value in self._stats:
             stats = self._stats[msg.body_type.value]
