@@ -67,8 +67,8 @@ class Main(KytosNApp):
             stats_list = msg.body
             stats.listen(event.source.switch, stats_list)
         else:
-            log.debug('No listener for %s in %s.', msg.body_type.value,
-                      list(self._stats.keys()))
+            log.debug('No listener for %s = %s in %s.', stats_type.name,
+                      stats_type.value, list(self._stats.keys()))
 
     # REST API
 
