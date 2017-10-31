@@ -40,19 +40,32 @@ class Main(KytosNApp):
             if switch.connection is not None:
                 stats.request(switch.connection)
 
-    @listen_to('kytos/of_core.v0x01.messages.in.ofpt_stats_reply',
-               'kytos/of_core.v0x04.messages.in.ofpt_multipart_reply')
-    def listener(self, event):
+    @listen_to('kytos/of_core.v0x01.messages.in.ofpt_stats_reply')
+    def listen_v0x01(self, event):
+        """Detect the message body type."""
+        stats_reply = event.content['message']
+        stats_type = stats_reply.body_type
+        self._listen(event, stats_type)
+
+    @listen_to('kytos/of_core.v0x04.messages.in.ofpt_multipart_reply')
+    def listen_v0x04(self, event):
+        """Detect the message body type."""
+        multipart_reply = event.content['message']
+        stats_type = multipart_reply.multipart_type
+        self._listen(event, stats_type)
+
+    def _listen(self, event, stats_type):
         """Listen to all stats reply we deal with.
 
-        Note: v0x01 and v0x04 ``body_type.value``s have the same meaning.
-        Besides, both ``msg.body`` have the fields/attributes we use. Thus,
-        we can treat them the same way and reuse the code.
+        Note: v0x01 ``body_type`` and v0x04 ``multipart_type`` have the same
+        values.  Besides, both ``msg.body`` have the fields/attributes we use.
+        Thus, we can treat them the same way and reuse the code.
         """
         msg = event.content['message']
-        if msg.body_type.value in self._stats:
-            stats = self._stats[msg.body_type.value]
-            stats.listen(event.source.switch, msg.body)
+        if stats_type.value in self._stats:
+            stats = self._stats[stats_type.value]
+            stats_list = msg.body
+            stats.listen(event.source.switch, stats_list)
         else:
             log.debug('No listener for %s in %s.', msg.body_type.value,
                       list(self._stats.keys()))
