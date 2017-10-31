@@ -5,8 +5,7 @@ from pathlib import Path
 
 import rrdtool
 from kytos.core import KytosEvent, log
-from napps.kytos.of_core.v0x01.flow import Flow as Flow01
-from napps.kytos.of_core.v0x04.flow import Flow as Flow04
+from napps.kytos.of_core.flow import FlowFactory
 # v0x01 and v0x04 PortStats are version independent
 from napps.kytos.of_core.flow import PortStats as OFCorePortStats
 from pyof.v0x01.common.phy_port import Port
@@ -341,7 +340,7 @@ class FlowStats(Stats):
     @classmethod
     def listen(cls, switch, flows_stats):
         """Receive flow stats."""
-        flow_class = cls._get_versioned_flow(switch)
+        flow_class = FlowFactory.get_class(switch)
         for fs in flows_stats:
             flow = flow_class.from_of_flow_stats(fs, switch)
 
@@ -354,9 +353,3 @@ class FlowStats(Stats):
             cls.rrd.update((switch.id, flow.id),
                            packet_count=flow.stats.packet_count,
                            byte_count=flow.stats.byte_count)
-
-    @staticmethod
-    def _get_versioned_flow(switch):
-        """Return a Flow for the switch OF version."""
-        of_version = switch.connection.protocol.version
-        return Flow01 if of_version == 0x01 else Flow04
