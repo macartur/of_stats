@@ -3,17 +3,19 @@ import time
 from abc import ABCMeta, abstractmethod
 from pathlib import Path
 
+import pyof.v0x01.controller2switch.common as v0x01
 import rrdtool
 from kytos.core import KytosEvent, log
-from napps.kytos.of_core.flow import FlowFactory
-# v0x01 and v0x04 PortStats are version independent
 from napps.kytos.of_core.flow import PortStats as OFCorePortStats
-from pyof.v0x01.common.phy_port import Port
-from pyof.v0x01.controller2switch.common import (AggregateStatsRequest,
-                                                 FlowStatsRequest,
-                                                 PortStatsRequest)
+# v0x01 and v0x04 PortStats are version independent
+from napps.kytos.of_core.flow import FlowFactory
+# Disable warning about ungrouped pyof imports due to isort
+from pyof.v0x01.common.phy_port import Port  # pylint: disable=C0412
+from pyof.v0x01.controller2switch.common import AggregateStatsRequest
 from pyof.v0x01.controller2switch.stats_request import StatsRequest, StatsTypes
-
+from pyof.v0x04.controller2switch import multipart_request as v0x04
+from pyof.v0x04.controller2switch.common import MultipartTypes
+from pyof.v0x04.controller2switch.multipart_request import MultipartRequest
 
 from . import settings
 
@@ -38,7 +40,7 @@ class Stats(metaclass=ABCMeta):
 
     @abstractmethod
     def listen(self, switch, stats):
-        """Listener for statistics."""
+        """Listen statistic replies."""
         pass
 
     def _send_event(self, req, conn):
@@ -49,7 +51,7 @@ class Stats(metaclass=ABCMeta):
 
 
 class RRD:
-    """"Round-robin database for keeping stats.
+    """Round-robin database for keeping stats.
 
     It store statistics every :data:`STATS_INTERVAL`.
     """
@@ -97,6 +99,7 @@ class RRD:
 
         See Also:
             :meth:`get_or_create_rrd`
+
         """
         path = settings.DIR / self._app
         folders, basename = index[:-1], index[-1]
@@ -169,6 +172,7 @@ class RRD:
             1. Iterator over timestamps
             2. Column (DS) names
             3. List of rows as tuples
+
         """
         rrd = self.get_rrd(index)
         if not Path(rrd).exists():
@@ -257,10 +261,19 @@ class PortStats(Stats):
 
     def request(self, conn):
         """Ask for port stats."""
-        body = PortStatsRequest(Port.OFPP_NONE)  # All ports
-        req = StatsRequest(body_type=StatsTypes.OFPST_PORT, body=body)
-        self._send_event(req, conn)
-        log.debug('Port Stats request for switch %s sent.', conn.switch.dpid)
+        request = self._get_versioned_request(conn.protocol.version)
+        self._send_event(request, conn)
+        log.debug('PortStats request for switch %s sent.', conn.switch.id)
+
+    @staticmethod
+    def _get_versioned_request(of_version):
+        if of_version == 0x01:
+            return StatsRequest(
+                body_type=StatsTypes.OFPST_PORT,
+                body=v0x01.PortStatsRequest(Port.OFPP_NONE))  # All ports
+        return MultipartRequest(
+            multipart_type=MultipartTypes.OFPMP_PORT_STATS,
+            body=v0x04.PortStatsRequest())
 
     @classmethod
     def listen(cls, switch, ports_stats):
@@ -332,10 +345,19 @@ class FlowStats(Stats):
 
     def request(self, conn):
         """Ask for flow stats."""
-        body = FlowStatsRequest()  # Port.OFPP_NONE and All Tables
-        req = StatsRequest(body_type=StatsTypes.OFPST_FLOW, body=body)
-        self._send_event(req, conn)
-        log.debug('Flow Stats request for switch %s sent.', conn.switch.dpid)
+        request = self._get_versioned_request(conn.protocol.version)
+        self._send_event(request, conn)
+        log.debug('FlowStats request for switch %s sent.', conn.switch.id)
+
+    @staticmethod
+    def _get_versioned_request(of_version):
+        if of_version == 0x01:
+            return StatsRequest(
+                body_type=StatsTypes.OFPST_FLOW,
+                body=v0x01.FlowStatsRequest())
+        return MultipartRequest(
+            multipart_type=MultipartTypes.OFPMP_FLOW,
+            body=v0x04.FlowStatsRequest())
 
     @classmethod
     def listen(cls, switch, flows_stats):
