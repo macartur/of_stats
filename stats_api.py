@@ -190,8 +190,12 @@ class PortStatsAPI(StatsAPI):
         if speed is None:
             for util_col in self._util_cols.values():
                 row[util_col] = None
-            log.warning('No speed, port %s, dpid %s', self._port,
-                        self._dpid[-3:])
+            # Shorten dpid for better log readability
+            if len(self._dpid) >= 22:
+                dpid = self._dpid[:3] + '...' + self._dpid[-3:]
+            else:
+                dpid = self._dpid
+            log.warning('No speed, port %s, dpid %s', self._port, dpid)
         else:
             for bytes_col, util_col in self._util_cols.items():
                 row[util_col] = row[bytes_col] / (speed / 8)  # bytes/sec
