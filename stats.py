@@ -151,14 +151,15 @@ class RRD:
         with settings.rrd_lock:
             rrdtool.create(*options)
 
-    def fetch(self, index, start='first', end='now', n_points=None):
+    def fetch(self, index, start=None, end=None, n_points=None):
         """Fetch average values from rrd.
 
         Args:
             index (list of str): Index for the RRD database. Examples:
                 [dpid], [dpid, port_no], [dpid, table id, flow hash].
             start (str, int): Unix timestamp in seconds for the first stats.
-                Defaults to the first recorded sample.
+                Defaults to be old enough to have the latest n_points
+                available (now - n_points * settings.STATS_INTERVAL).
             end (str, int): Unix timestamp in seconds for the last stats.
                 Defaults to current time.
             n_points (int): Number of points to return. May return more if
@@ -181,7 +182,7 @@ class RRD:
             raise FileNotFoundError(msg)
 
         # Use integers to calculate resolution
-        start, end = self._calc_start_end(start, end, rrd)
+        start, end = self._calc_start_end(start, end, n_points, rrd)
 
         # Find the best matching resolution for returning n_points.
         res_args = []
@@ -200,12 +201,14 @@ class RRD:
         return range(start + step, stop + 1, step), cols, rows
 
     @staticmethod
-    def _calc_start_end(start, end, rrd):
+    def _calc_start_end(start, end, n_points, rrd):
         """Calculate start and end values for fetch command."""
         # Use integers to calculate resolution
-        if end == 'now':
+        if end is None:
             end = int(time.time())
-        if start == 'first':
+        if start is None:  # Latest n_points
+            start = end - n_points * settings.STATS_INTERVAL
+        elif start == 'first':  # Usually empty because 'first' is too old
             with settings.rrd_lock:
                 start = rrdtool.first(rrd)
 

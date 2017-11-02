@@ -22,10 +22,8 @@ class StatsAPI(metaclass=ABCMeta):
 
     def get_points(self, index, n_points=30):
         """Return Flask response for port stats."""
-        start_str = request.args.get('start', 'first')
-        start = int(start_str) if start_str.isdigit() else start_str
-        end_str = request.args.get('end', 'now')
-        end = int(end_str) if end_str.isdigit() else end_str
+        start = request.args.get('start')
+        end = request.args.get('end')
 
         try:
             content = self._fetch(index, start, end, n_points)
