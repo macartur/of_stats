@@ -113,7 +113,7 @@ class PortStatsAPI(StatsAPI):
 
     @classmethod
     def get_port_stats(cls, dpid, port):
-        """Get up to 60 points of all statistics of PortStats.
+        """Get up to 30 points of all statistics of PortStats.
 
         Includes start and end that are both optional and and must be submitted
         in the form "?start=x&end=y".
@@ -148,8 +148,8 @@ class PortStatsAPI(StatsAPI):
     def get_random_port_stats():
         stats = {'data': {
             'timestamps': list(range(1508532494, 1508533094, 10)),
-            'rx_bytes': [randint(100_000, 1_000_000) for _ in range(60)],
-            'tx_bytes': [randint(100_000, 1_000_000) for _ in range(60)],
+            'rx_bytes': [randint(100_000, 1_000_000) for _ in range(30)],
+            'tx_bytes': [randint(100_000, 1_000_000) for _ in range(30)],
         }}
         return StatsAPI._get_response(stats)
 
