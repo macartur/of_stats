@@ -22,14 +22,16 @@ class StatsAPI(metaclass=ABCMeta):
 
     def get_points(self, index, n_points=30):
         """Return Flask response for port stats."""
+        try:
+            data = self._get_points_data(index, n_points)
+            return self._get_response(data)
+        except FileNotFoundError as e:
+            return self._get_rrd_not_found_error(e)
+
+    def _get_points_data(self, index, n_points):
         start = request.args.get('start')
         end = request.args.get('end')
-
-        try:
-            content = self._fetch(index, start, end, n_points)
-        except FileNotFoundError as e:
-            content = self._get_rrd_not_found_error(e)
-        return StatsAPI._get_response(content)
+        return self._fetch(index, start, end, n_points)
 
     def get_latest(self, fn_items):
         """Return latest stats for items obtained in a switch."""
@@ -172,7 +174,15 @@ class PortStatsAPI(StatsAPI):
     def get_stats(self):
         """See :meth:`get_port_stats`."""
         index = (self._dpid, self._port)
-        return super().get_points(index)
+        return self.get_points(index)
+
+    def _get_points_data(self, index, n_points):
+        """Add port speed to rrd data."""
+        response = super()._get_points_data(index, n_points)
+        switch = self._get_switch()
+        iface = switch.get_interface_by_port_no(self._port)
+        response['data']['speed'] = self._get_speed(iface) / 8  # bytes
+        return response
 
     def _get_speed(self, iface):
         """Give priority to user-defined speed. Then, OF spec's."""
