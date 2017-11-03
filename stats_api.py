@@ -181,7 +181,9 @@ class PortStatsAPI(StatsAPI):
         response = super()._get_points_data(index, n_points)
         switch = self._get_switch()
         iface = switch.get_interface_by_port_no(self._port)
-        response['data']['speed'] = self._get_speed(iface) / 8  # bytes
+        speed = self._get_speed(iface)
+        if speed:
+            response['data']['speed'] = speed / 8  # bytes
         return response
 
     def _get_speed(self, iface):
