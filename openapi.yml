@@ -184,6 +184,10 @@ components:
               example: [1234.567890234630672, 5678.9572424680, 12.34574680]
               items:
                 type: number
+            speed:
+              type: number
+              description: Maximum port speed in Bps or *null* if unknown
+              example: 12500000000
             tx_bytes:
               type: array
               description: Transmitted bytes per second
