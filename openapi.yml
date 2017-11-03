@@ -17,7 +17,7 @@ paths:
       summary: Given a switch, list its ports with their latest statistics
       description: "Get the latest statistics of all the ports of a switch
         identified by ``dpid``. Also provide the interface name, **MAC**
-        address and **link speed** (bps). Ports that have no statistics
+        address and **link speed** (Bps). Ports that have no statistics
         available are ignored."
       parameters:
         - $ref: '#/components/parameters/dpid'
@@ -134,9 +134,9 @@ components:
           description: Receiving errors per second
           example: 0.0
         speed:
-          type: integer
-          description: Maximum port speed in bps
-          example: 10000000000
+          type: number
+          description: Maximum port speed in Bps or *null* if unknown
+          example: 12500000000
         tx_bytes:
           type: number
           description: Transmitted bytes per second
@@ -202,7 +202,7 @@ components:
               example: [56.7834523456, 7.89562346, 987.65765434]
               items:
                 type: number
-                
+
     Action:
       type: object
       properties:
@@ -214,7 +214,7 @@ components:
           type: string
           description: Name of an action type
           example: action_output
-  
+
     Flow:
       type: object
       properties:
@@ -312,7 +312,7 @@ components:
           type: integer
           description: Wildcards field
           example: 3678435
-  
+
     FlowDetails:
       type: object
       properties:

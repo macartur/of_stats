@@ -16,7 +16,7 @@ The provided statistics, per switch, are:
 
 * **Ports/Interfaces**: bytes/sec, utilization, dropped packets/sec and
   errors/sec split into transmission and reception; interface name, MAC address
-  and link speed (bps);
+  and link speed (Bps);
 * **Flows**: packets/sec, bytes/sec;
 
 ##########
@@ -96,32 +96,40 @@ for more statistics, as well as rrdtool-related configuration in the file
 Custom bandwidth
 ****************
 Sometimes, the link speed is wrongly reported by the switch or there's no such
-speed in the protocol specification. In these cases, you can manually define the
-speeds in the file ``user_speed.json``. Changes to this file will be loaded
+speed in the protocol specification. In these cases, you can manually define
+the speeds in the file ``user_speed.json``. Changes to this file will be loaded
 automatically without the need to restart the controller.
 
-Setting the interface speeds manually is quite easy. Create ``user_speed.json``
-following the provided ``user_speed.example.json`` file. Let's see what the
-example means:
+Setting interface speeds manually is quite easy. Just create
+``user_speed.json`` by copying and customizing the provided
+``user_speed.example.json`` file. Let's see what the provided example means:
 
 .. code-block:: json
 
    {
-     "default": 100,
+     "default": 12500000000,
      "00:00:00:00:00:00:00:01":
      {
-       "default": 10,
-       "4": 1
+       "default": 1250000000,
+       "4": 125000000
      }
    }
 
-The speed is specified in Gbps (not necessarily integers). The first line has
-an optional *default* value that specify the speed of any interface that is not
-found in this file. The switch whose dpid is *00:...:00:01* also has an
-optional *default* value of 10 Gbps for all its ports except the number 4 that
-is 1 Gbps. If there is no *default* value and the dpid or port is not
-specified, the speed will be taken following the OpenFlow specifications.
-To make it clear, find below the speed of some interfaces when
+Keep in mind that, for consistency reasons, we try to keep the units in bytes
+whenever possible. Thus, speeds should specified in bytes/sec (not necessarily
+integers).
+
+Any value in this file overrides the OpenFlow values returned by the switches.
+In this file, inner values take precedence over outer ones.
+
+The *default* values are optional. The first line has a default value that
+specifies the speed of any interface that is not found in this file
+(12,500,000,000 Bps = 100 Gbps). Then, there's a default value set for all
+interfaces of the switch whose dpid is *00:...:00:01* (1,250,000,000 Bps = 10
+Gbps). Even more specifically, its interface with port number 4 is 125,000,000
+Bps (1 Gbps).
+
+To make it even more clear, find below the speed of several interfaces when
 ``user_speed.json`` has the content above:
 
 +-------------------------+------+--------------+
@@ -182,11 +190,21 @@ New settings are not applied
 Some changes in ``settings.py`` require recreating the database. Check the
 section ``Deleting the database`` below.
 
+******************
+Unexpected results
+******************
+If you get fewer points than expected for a specific flow or port, it might be
+that there's not enough data to calculate all of them. Try to specify the
+"start" parameter using a later time that you know traffic was being collected.
+
+You may also try to delete RRD databases (see below) so they can be recreated
+with the latest configuration.
+
 *********************
 Deleting the database
 *********************
 You don't have to stop the controller to delete the databases. This NApp will
-recreate them as needed after you run:
+recreate them as needed after you run (no need to restart the NApp):
 
 .. code-block:: shell
 

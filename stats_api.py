@@ -181,9 +181,7 @@ class PortStatsAPI(StatsAPI):
         response = super()._get_points_data(index, n_points)
         switch = self._get_switch()
         iface = switch.get_interface_by_port_no(self._port)
-        speed = self._get_speed(iface)
-        if speed:
-            response['data']['speed'] = speed / 8  # bytes
+        response['data']['speed'] = self._get_speed(iface)
         return response
 
     def _get_speed(self, iface):
@@ -208,7 +206,7 @@ class PortStatsAPI(StatsAPI):
             log.warning('No speed, port %s, dpid %s', self._port, dpid)
         else:
             for bytes_col, util_col in self._util_cols.items():
-                row[util_col] = row[bytes_col] / (speed / 8)  # bytes/sec
+                row[util_col] = row[bytes_col] / speed  # bytes/sec
         return row
 
 
