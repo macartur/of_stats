@@ -24,9 +24,9 @@ class StatsAPI(metaclass=ABCMeta):
         """Return Flask response for port stats."""
         try:
             data = self._get_points_data(index, n_points)
-            return self._get_response(data)
         except FileNotFoundError as e:
-            return self._get_rrd_not_found_error(e)
+            data = self._get_rrd_not_found_error(e)
+        return self._get_response(data)
 
     def _get_points_data(self, index, n_points):
         start = request.args.get('start')
