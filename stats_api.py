@@ -185,12 +185,15 @@ class PortStatsAPI(StatsAPI):
         return response
 
     def _get_speed(self, iface):
-        """Give priority to user-defined speed. Then, OF spec's."""
+        """Update and return interface speed.
+
+        Update controller's interface speed by reading user_speed.json file.
+        """
         user = UserSpeed()
-        speed = user.get_speed(self._dpid, iface.port_number)
-        if speed is None:
-            speed = iface.get_speed()
-        return speed
+        user_speed = user.get_speed(self._dpid, iface.port_number)
+        if user_speed != iface.get_custom_speed():
+            iface.set_custom_speed(user_speed)
+        return iface.speed
 
     def _add_utilization(self, row, iface):
         """Calculate utilization and also add port number."""
