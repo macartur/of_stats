@@ -40,6 +40,4 @@ class UserSpeed:
                 speed = switch.get('default')
             else:
                 speed = switch.get(port)
-        if speed is not None:
-            speed *= 10**9
         return speed
