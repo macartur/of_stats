@@ -12,7 +12,7 @@ rrd_lock = Lock()
 
 # RRD Tool Settings
 
-DIR = Path(__file__).parent / 'rrd'
+DIR = Path(__file__).resolve().parent / 'rrd'
 
 # If no new data is supplied for more than *_TIMEOUT* seconds,
 # the temperature becomes *UNKNOWN*.
