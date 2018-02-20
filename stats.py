@@ -12,9 +12,9 @@ from napps.kytos.of_core.flow import FlowFactory
 # Disable warning about ungrouped pyof imports due to isort
 from pyof.v0x01.common.phy_port import Port  # pylint: disable=C0412
 from pyof.v0x01.controller2switch.common import AggregateStatsRequest
-from pyof.v0x01.controller2switch.stats_request import StatsRequest, StatsTypes
+from pyof.v0x01.controller2switch.stats_request import StatsRequest, StatsType
 from pyof.v0x04.controller2switch import multipart_request as v0x04
-from pyof.v0x04.controller2switch.common import MultipartTypes
+from pyof.v0x04.controller2switch.common import MultipartType
 from pyof.v0x04.controller2switch.multipart_request import MultipartRequest
 
 from . import settings
@@ -272,10 +272,10 @@ class PortStats(Stats):
     def _get_versioned_request(of_version):
         if of_version == 0x01:
             return StatsRequest(
-                body_type=StatsTypes.OFPST_PORT,
+                body_type=StatsType.OFPST_PORT,
                 body=v0x01.PortStatsRequest(Port.OFPP_NONE))  # All ports
         return MultipartRequest(
-            multipart_type=MultipartTypes.OFPMP_PORT_STATS,
+            multipart_type=MultipartType.OFPMP_PORT_STATS,
             body=v0x04.PortStatsRequest())
 
     @classmethod
@@ -318,7 +318,7 @@ class AggregateStats(Stats):
     def request(self, conn):
         """Ask for flow stats."""
         body = AggregateStatsRequest()  # Port.OFPP_NONE and All Tables
-        req = StatsRequest(body_type=StatsTypes.OFPST_AGGREGATE, body=body)
+        req = StatsRequest(body_type=StatsType.OFPST_AGGREGATE, body=body)
         self._send_event(req, conn)
         log.debug('Aggregate Stats request for switch %s sent.',
                   conn.switch.dpid)
@@ -356,10 +356,10 @@ class FlowStats(Stats):
     def _get_versioned_request(of_version):
         if of_version == 0x01:
             return StatsRequest(
-                body_type=StatsTypes.OFPST_FLOW,
+                body_type=StatsType.OFPST_FLOW,
                 body=v0x01.FlowStatsRequest())
         return MultipartRequest(
-            multipart_type=MultipartTypes.OFPMP_FLOW,
+            multipart_type=MultipartType.OFPMP_FLOW,
             body=v0x04.FlowStatsRequest())
 
     @classmethod

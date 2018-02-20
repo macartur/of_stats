@@ -1,7 +1,7 @@
 """Statistics application."""
 from kytos.core import KytosNApp, log, rest
 from kytos.core.helpers import listen_to
-from pyof.v0x01.controller2switch.stats_request import StatsTypes
+from pyof.v0x01.controller2switch.stats_request import StatsType
 
 from napps.kytos.of_stats import settings
 from napps.kytos.of_stats.stats import FlowStats, PortStats
@@ -17,8 +17,8 @@ class Main(KytosNApp):
 
         # Initialize statistics
         msg_out = self.controller.buffers.msg_out
-        self._stats = {StatsTypes.OFPST_PORT.value: PortStats(msg_out),
-                       StatsTypes.OFPST_FLOW.value: FlowStats(msg_out)}
+        self._stats = {StatsType.OFPST_PORT.value: PortStats(msg_out),
+                       StatsType.OFPST_FLOW.value: FlowStats(msg_out)}
 
         StatsAPI.controller = self.controller
 
