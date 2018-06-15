@@ -10,15 +10,12 @@ Added
 
 Changed
 =======
-- Moved of_stats to a repository of its own
-- REST API endpoints prefixed with "v1/"
 
 Deprecated
 ==========
 
 Removed
 =======
-- Description, now dealt in kytos/of_core.
 
 Fixed
 =====
@@ -26,9 +23,52 @@ Fixed
 Security
 ========
 
+[1.1.0] - 2018-04-20
+********************
+Added
+=====
+- Add speed to port statistics..
+- Multipart requests for switches with OpenFlow 1.3.
+- Use flow factory.
+- Add support for OF 0x04 (1.3).
 
-[2017.1b3] - "bethania" beta3 - 2017-06-16
-******************************************
+Changed
+=======
+- Adapt the NApp to changes in python-openflow.
+- Get stats updates from OF1.3 switches.
+- Update user_speed to bytes.
+- Move tests to tests folder.
+- Update controller's custom interface speed.
+- Update OpenAPI.
+- Standardize interface speed value.
+- Return 30 points instead of 60.
+- Get latest 30 points instead of whole BD period.
+- Update v0x04 body_type to multipart_type.
+- Update RRD creation time steps.
+- Use generic flow.
+- Add /random for random port statistics.
+- Update controller's interface stats.
+- Update controller's flow.stats.
+
+Fixed
+=====
+- Fix retrieve flows error.
+- Fix exception when disabling NApp.
+- Fix RRD-not-found reply.
+- Fix bug when switch has no speed.
+
+[1.0.0] - 2017-11-30
+********************
+Added
+=====
+- Use new generic Flow from of_core.
+- Create Rest API in openapi.yml.
+- Use rest decorator in of_stats.
+- Adding dependency of `kytos/of_core` in kytos.json.
+- include __init__ files in version specific of_core utils modules.
+
+[0.4.0] - 2017-06-16
+********************
 Added
 =====
 - Experimental OpenFlow 1.3 support in of_core.
@@ -51,8 +91,8 @@ Fixed
   switches.
 - Several bug fixes.
 
-[2017.1b2] - "bethania" beta2 - 2017-05-05
-******************************************
+[0.3.0] - 2017-05-05
+********************
 Added
 =====
 - Individual requirements.txt file for NApps.
@@ -86,8 +126,8 @@ Fixed
 - Several bug fixes.
 
 
-[2017.1b1] - "bethania" beta1 - 2017-03-24
-******************************************
+[0.2.0] - 2017-03-24
+********************
 Added
 =====
 - Python3.6 requirement.
@@ -128,8 +168,8 @@ Fixed
 - Many bug fixes.
 
 
-[2016.1b0] - 1.1.0 beta0 - 2016-11-09
-*************************************
+[0.1.0] - 2016-11-09
+********************
 Added
 =====
 - of.web.topology.layout NApp - Application to manage topology layout on the
